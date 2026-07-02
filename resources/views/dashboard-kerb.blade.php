@@ -66,12 +66,14 @@
               this.editingEntry = JSON.parse(JSON.stringify(this.rawEntries.find(e => e.id === entryId)));
               this.spread = 'edit';
           }
-      }" x-init="paginateBook()">
+      }" 
+      x-init="paginateBook()"
+      x-effect="spread || currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
 
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
         <p class="md:hidden text-xs text-zinc-400 text-center -mb-2">👉 Swipe to see the next page</p>
 
-        <div class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
+        <div x-ref="bookContainer" class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
             <div class="flex md:grid md:grid-cols-2 md:bg-[#fafafa] md:rounded-[2rem] md:shadow-inner md:min-h-[550px] md:border md:border-zinc-900/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-zinc-200 w-full">
 
                 <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
@@ -96,7 +98,7 @@
                                         <span class="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md font-medium ml-2">Cont.</span>
                                     </template>
                                 </div>
-                                <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-wrap select-text" x-text="leftPage?.body"></p>
+                                <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="leftPage?.body"></p>
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2">
@@ -233,7 +235,7 @@
                                         <span class="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md font-medium ml-2">Cont.</span>
                                     </template>
                                 </div>
-                                <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-wrap select-text" x-text="rightPage?.body"></p>
+                                <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="rightPage?.body"></p>
                             </div>
 
                             <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-8 text-center space-y-4 my-4 min-h-[300px]">
