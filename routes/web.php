@@ -53,3 +53,35 @@ Route::post('/entries', function (Request $request) {
 
     return redirect()->route('dashboard');
 })->middleware('auth');
+
+// Update entry
+Route::put('/entries/{entry}', function (Request $request, Entry $entry) {
+    if ($entry->user_id !== Auth::id()) {
+        abort(403);
+    }
+
+    $request->validate([
+        'title'   => 'required|string|max:255',
+        'content' => 'required|string',
+        'mood'    => 'required|string',
+    ]);
+
+    $entry->update([
+        'title' => $request->input('title'),
+        'body'  => $request->input('content'),
+        'mood'  => $request->input('mood'),
+    ]);
+
+    return redirect()->route('dashboard');
+})->middleware('auth');
+
+// Delete entry
+Route::delete('/entries/{entry}', function (Entry $entry) {
+    if ($entry->user_id !== Auth::id()) {
+        abort(403);
+    }
+
+    $entry->delete();
+
+    return redirect()->route('dashboard');
+})->middleware('auth');

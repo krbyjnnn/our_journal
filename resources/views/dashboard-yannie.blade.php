@@ -21,24 +21,21 @@
           spread: 'index', 
           currentPageIndex: 0, 
           pages: [], 
+          rawEntries: @json($entries->sortBy('created_at')->values()->map(fn($e) => [
+              'id' => $e->id,
+              'title' => $e->title,
+              'body' => $e->body,
+              'mood' => $e->mood,
+              'date' => $e->created_at->format('m/d'),
+          ])),
+          editingEntry: null,
           totalEntries: {{ $entries->count() }},
           
           paginateBook() {
-              let rawEntries = [
-                  @foreach($entries->sortBy('created_at') as $entry)
-                  {
-                      title: '{{ addslashes($entry->title) }}',
-                      body: '{{ addslashes($entry->body) }}',
-                      mood: '{{ $entry->mood }}',
-                      date: '{{ $entry->created_at->format('m/d') }}'
-                  },
-                  @endforeach
-              ];
-              
               let computedPages = [];
               let globalPageNum = 1;
 
-              rawEntries.forEach(entry => {
+              this.rawEntries.forEach(entry => {
                   let words = entry.body.split(/\s+/);
                   let wordsPerPage = 85; 
                   let chunkCount = Math.ceil(words.length / wordsPerPage) || 1;
@@ -49,6 +46,7 @@
                       let textChunk = words.slice(start, end).join(' ');
 
                       computedPages.push({
+                          entryId: entry.id,
                           pageNumber: globalPageNum++,
                           title: entry.title,
                           mood: entry.mood,
@@ -60,6 +58,11 @@
               });
 
               this.pages = computedPages;
+          },
+
+          startEdit(entryId) {
+              this.editingEntry = JSON.parse(JSON.stringify(this.rawEntries.find(e => e.id === entryId)));
+              this.spread = 'edit';
           }
       }" x-init="paginateBook()">
 
@@ -68,10 +71,10 @@
         <p class="md:hidden text-xs text-rose-300 text-center -mb-2">👉 Swipe to see the next page</p>
 
         <div class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
-            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:divide-x md:divide-rose-200/60 md:min-h-[550px] md:border md:border-rose-500/10 md:p-8 gap-4 md:gap-0">
+            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:divide-x md:divide-rose-200/60 md:min-h-[550px] md:border md:border-rose-500/10 md:p-8 gap-0 md:gap-0">
 
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="min-w-[90%] md:min-w-0 snap-center flex-shrink-0 bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
+                <div class="w-full md:min-w-0 snap-center snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -97,7 +100,17 @@
                                 <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap select-text" x-text="leftPage?.body"></p>
                             </div>
                         </div>
-                        <div class="text-xs text-rose-300" x-text="pages[currentPageIndex * 2] ? 'Recorded on ' + pages[currentPageIndex * 2]?.date : ''"></div>
+                        <div class="flex items-center justify-between pt-2">
+                            <span class="text-xs text-rose-300" x-text="pages[currentPageIndex * 2] ? 'Recorded on ' + pages[currentPageIndex * 2]?.date : ''"></span>
+                            <div class="flex items-center space-x-3" x-show="leftPage">
+                                <button type="button" @click="startEdit(leftPage.entryId)" class="text-xs font-bold text-rose-300 hover:text-rose-500 transition-colors">✏️ Edit</button>
+                                <form :action="'/entries/' + leftPage?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-xs font-bold text-red-400 hover:text-red-600 transition-colors">🗑️ Delete</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- State 3: Write Page Form Canvas Left Side -->
@@ -129,10 +142,41 @@
                             </div>
                         </form>
                     </div>
+
+                    <!-- State 4: Edit Entry Form Canvas Left Side -->
+                    <div x-show="spread === 'edit'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
+                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="space-y-4 flex-1 flex flex-col justify-between">
+                            @csrf
+                            @method('PUT')
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center border-b pb-1">
+                                    <span class="text-xs font-bold text-rose-400 uppercase">Edit Entry...</span>
+                                </div>
+                                <input type="text" name="title" required x-model="editingEntry.title" placeholder=" Journal Title..." class="w-full bg-transparent border-b border-rose-200/60 focus:outline-none text-lg font-bold text-slate-800 py-1">
+                                <textarea name="content" required rows="8" x-model="editingEntry.body" placeholder="What's on your mind?" class="w-full bg-transparent resize-none focus:outline-none text-slate-600 text-sm leading-relaxed"></textarea>
+                            </div>
+                            
+                            <div class="space-y-2 pt-2">
+                                <div class="flex items-center space-x-3">
+                                    <label class="text-xs font-bold text-slate-400">Sticker badge:</label>
+                                    <select name="mood" x-model="editingEntry.mood" class="bg-white border border-rose-200 rounded-xl px-2 py-1 text-xs text-slate-700">
+                                        <option value="🌷">🌷</option>
+                                        <option value="🩷">🩷</option>
+                                        <option value="😽">😽</option>
+                                        <option value="😴">😴</option>
+                                        <option value="📞">📞</option>
+                                        <option value="🎮">🎮</option>
+                                        <option value="🍟">🍟</option>
+                                        <option value="✨">✨</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="min-w-[90%] md:min-w-0 snap-center flex-shrink-0 bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
+                <div class="w-full md:min-w-0 snap-center snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -187,7 +231,17 @@
                                 <p class="text-xs text-slate-400 max-w-[200px]">This side of the book is empty. Press Next to open up your drafting workspace!</p>
                             </div>
                         </div>
-                        <div class="text-xs text-rose-300 text-right" x-text="pages[(currentPageIndex * 2) + 1] ? 'Recorded on ' + pages[(currentPageIndex * 2) + 1]?.date : ''"></div>
+                        <div class="flex items-center justify-between pt-2">
+                            <div class="flex items-center space-x-3" x-show="rightPage">
+                                <button type="button" @click="startEdit(rightPage.entryId)" class="text-xs font-bold text-rose-300 hover:text-rose-500 transition-colors">✏️ Edit</button>
+                                <form :action="'/entries/' + rightPage?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-xs font-bold text-red-400 hover:text-red-600 transition-colors">🗑️ Delete</button>
+                                </form>
+                            </div>
+                            <span class="text-xs text-rose-300" x-text="pages[(currentPageIndex * 2) + 1] ? 'Recorded on ' + pages[(currentPageIndex * 2) + 1]?.date : ''"></span>
+                        </div>
                     </div>
 
                     <!-- State 3: Write Page Canvas Right Side Confirmation -->
@@ -198,6 +252,18 @@
                             <p class="text-xs text-slate-400 max-w-[200px]">Sure, save na talaga?</p>
                             <button type="submit" form="journalForm" class="py-2.5 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-sm transition-all">
                                 Save to Journal
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- State 4: Edit Confirmation Right Side -->
+                    <div x-show="spread === 'edit'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
+                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-6 text-center space-y-4">
+                            <span class="text-4xl">✏️</span>
+                            <h4 class="text-base font-bold text-slate-800">Update this page?</h4>
+                            <p class="text-xs text-slate-400 max-w-[200px]">Make sure everything looks right before saving.</p>
+                            <button type="submit" form="editForm" class="py-2.5 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-sm transition-all">
+                                Save Changes
                             </button>
                         </div>
                     </div>
@@ -217,6 +283,11 @@
                             @click="if(pages.length > 0) { spread = 'read'; currentPageIndex = Math.floor((pages.length - 1) / 2) } else { spread = 'index' }" 
                             class="px-5 py-2 bg-white border border-rose-200 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:scale-105 transition-all">
                         ⬅ Back
+                    </button>
+                    <button x-show="spread === 'edit'" 
+                            @click="spread = 'read'; editingEntry = null" 
+                            class="px-5 py-2 bg-white border border-rose-200 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm hover:scale-105 transition-all">
+                        ⬅ Cancel
                     </button>
                     <button x-show="spread === 'read' && currentPageIndex > 0" 
                             @click="currentPageIndex--" 
