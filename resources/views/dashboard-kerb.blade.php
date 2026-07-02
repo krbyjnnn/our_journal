@@ -38,13 +38,20 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  let lines = entry.body.split('\n');
+                  // Normalize excessive blank lines so our line-counting matches how
+                  // `white-space: pre-line` actually renders the text (it collapses
+                  // runs of blank lines down to a single line break). Without this,
+                  // a bunch of consecutive newlines in an entry would eat up the
+                  // page's line budget without showing anything on screen, causing
+                  // pages to break way too early and look almost empty.
+                  let normalizedBody = entry.body.replace(/\n{2,}/g, '\n').trim();
+                  let lines = normalizedBody.split('\n');
                   let currentPageLines = [];
                   let currentLineCount = 0;
                   
-                  // FIXED: Tuned for standard mobile portrait heights to prevent spilling over the card bottom
+                  // Tuned for standard mobile portrait heights to prevent spilling over the card bottom
                   let maxLinesPerPage = 12; 
-                  // FIXED: Matches standard mobile screen widths for 14px font size text tracking
+                  // Matches standard mobile screen widths for 14px font size text tracking
                   let charsPerLine = 38; 
 
                   lines.forEach((line) => {
