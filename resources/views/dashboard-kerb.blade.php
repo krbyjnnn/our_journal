@@ -39,7 +39,7 @@
 
               this.rawEntries.forEach(entry => {
                   let words = entry.body.split(/\s+/);
-                  let wordsPerPage = 85; 
+                  let wordsPerPage = 170; 
                   let chunkCount = Math.ceil(words.length / wordsPerPage) || 1;
 
                   for (let i = 0; i < chunkCount; i++) {
