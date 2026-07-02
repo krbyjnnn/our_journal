@@ -38,11 +38,10 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  // Tokenize by tracking actual words vs formatting newlines explicitly
                   let tokens = entry.body.match(/\n+|\S+/g) || [];
                   
-                  // FIXED: Strict word budget per page. 80 words utilizes the page length beautifully.
-                  let maxWordsPerPage = 80; 
+                  // FIXED: Changed budget to a safe 65 words per page to stop any bottom clipping on mobile
+                  let maxWordsPerPage = 65; 
                   
                   let currentChunk = [];
                   let wordsOnThisPage = 0;
@@ -51,12 +50,10 @@
                       let token = tokens[i];
                       currentChunk.push(token);
 
-                      // Only count actual visible text words toward the limit budget
                       if (!token.includes('\n')) {
                           wordsOnThisPage++;
                       }
 
-                      // Break page if word limit reached OR we hit the end of the entry text
                       if (wordsOnThisPage >= maxWordsPerPage || i === tokens.length - 1) {
                           let pageText = '';
                           currentChunk.forEach((t, idx) => {
@@ -77,7 +74,6 @@
                               isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
                           });
 
-                          // Reset counters for the next page segment boundary
                           currentChunk = [];
                           wordsOnThisPage = 0;
                       }
