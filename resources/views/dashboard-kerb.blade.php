@@ -38,7 +38,6 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  // FIX: Match words OR single newlines so stanzas aren't deleted
                   let tokens = entry.body.match(/\n|\S+/g) || [];
                   let wordsPerPage = 170; 
                   let chunkCount = Math.ceil(tokens.length / wordsPerPage) || 1;
@@ -48,7 +47,6 @@
                       let end = start + wordsPerPage;
                       let tokenChunk = tokens.slice(start, end);
 
-                      // Reconstruct the text elegantly while managing spaces around newlines
                       let textChunk = '';
                       tokenChunk.forEach((token, index) => {
                           if (token === '\n') {
@@ -79,9 +77,8 @@
           }
       }" 
       x-init="paginateBook()"
-      x-effect="spread || currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
-
-    <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
+      x-effect="spread; currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
+      <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
         <p class="md:hidden text-xs text-zinc-400 text-center -mb-2">👉 Swipe to see the next page</p>
 
         <div x-ref="bookContainer" class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
@@ -343,7 +340,7 @@
 
             <form action="{{ route('logout') }}" method="POST" class="w-full text-center pt-2">
                 @csrf
-                <button type="submit" class="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-2xl shadow-md text-xs uppercase tracking-widest transition-all">Close Book 📕</button>
+                <button type="submit" class="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-2xl shadow-md text-xs uppercase tracking-widest transition-all">Close Journal 📕</button>
             </form>
         </div>
     </div>
