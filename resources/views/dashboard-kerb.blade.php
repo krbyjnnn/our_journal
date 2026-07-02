@@ -12,6 +12,8 @@
         [x-cloak] { display: none !important; }
         .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .book-scroll::-webkit-scrollbar { display: none; }
+        .book-scroll { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
     </style>
 </head>
 <body class="bg-gradient-to-tr from-zinc-200 via-stone-100 to-neutral-200 min-h-screen flex flex-col items-center justify-center p-4 select-none" 
@@ -63,12 +65,13 @@
 
     <!-- OPEN BOOK SYSTEM -->
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
+        <p class="md:hidden text-xs text-zinc-400 text-center -mb-2">👉 Swipe to turn the page</p>
         <!-- Minimalist Black & White Border Outline -->
         <div class="w-full bg-zinc-800/5 border border-zinc-900/10 rounded-[2.5rem] shadow-2xl p-4 md:p-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 bg-[#fafafa] rounded-[2rem] shadow-inner min-h-[550px] divide-y md:divide-y-0 md:divide-x divide-zinc-200 relative overflow-hidden">
+            <div class="book-scroll flex md:grid md:grid-cols-2 overflow-x-auto md:overflow-visible snap-x snap-mandatory bg-[#fafafa] rounded-[2rem] shadow-inner min-h-[550px] divide-x divide-zinc-200 relative">
                 
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="p-6 md:p-10 flex flex-col justify-between h-full bg-gradient-to-l from-transparent to-zinc-50">
+                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full bg-gradient-to-l from-transparent to-zinc-50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -131,7 +134,7 @@
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="p-6 md:p-10 flex flex-col justify-between h-full">
+                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -182,7 +185,7 @@
                             <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-8 text-center space-y-4 my-4 min-h-[300px]">
                                 <span class="text-4xl">✒️</span>
                                 <h4 class="text-base font-bold text-zinc-800">Clean Slate</h4>
-                                <p class="text-xs text-zinc-400 max-w-[200px]">Ihttps://our-journal-o350.onrender.comf you come across this clean slate, go to the next page to write a new one, baby!</p>
+                                <p class="text-xs text-zinc-400 max-w-[200px]">If you come across this clean slate, go to the next page to write a new one, baby!</p>
                             </div>
                         </div>
                         <div class="text-xs text-zinc-400 text-right" x-text="pages[(currentPageIndex * 2) + 1] ? 'Logged on ' + pages[(currentPageIndex * 2) + 1]?.date : ''"></div>

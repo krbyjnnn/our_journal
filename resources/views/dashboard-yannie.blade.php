@@ -12,6 +12,8 @@
         [x-cloak] { display: none !important; }
         .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .book-scroll::-webkit-scrollbar { display: none; }
+        .book-scroll { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
     </style>
 </head>
 <body class="bg-gradient-to-tr from-rose-100 via-pink-50 to-white min-h-screen flex flex-col items-center justify-center p-4 select-none" 
@@ -63,11 +65,12 @@
 
     <!-- OPEN BOOK SYSTEM -->
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
+        <p class="md:hidden text-xs text-rose-300 text-center -mb-2">👉 Swipe to turn the page</p>
         <div class="w-full bg-rose-400/10 border border-rose-500/10 rounded-[2.5rem] shadow-2xl p-4 md:p-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 bg-white rounded-[2rem] shadow-inner min-h-[550px] divide-y md:divide-y-0 md:divide-x divide-rose-200/60 relative overflow-hidden">
+            <div class="book-scroll flex md:grid md:grid-cols-2 overflow-x-auto md:overflow-visible snap-x snap-mandatory bg-white rounded-[2rem] shadow-inner divide-x divide-rose-200/60 min-h-[550px] relative">
                 
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="p-6 md:p-10 flex flex-col justify-between h-full bg-gradient-to-l from-transparent to-rose-50/50">
+                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full bg-gradient-to-l from-transparent to-rose-50/50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -128,7 +131,7 @@
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="p-6 md:p-10 flex flex-col justify-between h-full">
+                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
