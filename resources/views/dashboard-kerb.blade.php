@@ -38,52 +38,49 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  let lines = entry.body.split('\n');
-                  let currentPageLines = [];
-                  let currentLineCount = 0;
+                  // Tokenize by tracking actual words vs formatting newlines explicitly
+                  let tokens = entry.body.match(/\n+|\S+/g) || [];
                   
-                  // FIXED: 16 visual lines maximizes vertical spacing beautifully
-                  let maxLinesPerPage = 16; 
-                  // FIXED: 45 chars handles typical word wrapping without underestimating space
-                  let charsPerLine = 45; 
+                  // FIXED: Strict word budget per page. 80 words utilizes the page length beautifully.
+                  let maxWordsPerPage = 80; 
+                  
+                  let currentChunk = [];
+                  let wordsOnThisPage = 0;
 
-                  lines.forEach((line) => {
-                      let estimatedVisualLines = 0;
+                  for (let i = 0; i < tokens.length; i++) {
+                      let token = tokens[i];
+                      currentChunk.push(token);
 
-                      if (line.trim().length === 0) {
-                          estimatedVisualLines = 1;
-                      } else {
-                          estimatedVisualLines = Math.max(1, Math.ceil(line.length / charsPerLine));
+                      // Only count actual visible text words toward the limit budget
+                      if (!token.includes('\n')) {
+                          wordsOnThisPage++;
                       }
 
-                      if (currentLineCount + estimatedVisualLines > maxLinesPerPage && currentPageLines.length > 0) {
+                      // Break page if word limit reached OR we hit the end of the entry text
+                      if (wordsOnThisPage >= maxWordsPerPage || i === tokens.length - 1) {
+                          let pageText = '';
+                          currentChunk.forEach((t, idx) => {
+                              if (t.includes('\n')) {
+                                  pageText += t;
+                              } else {
+                                  pageText += t + (idx < currentChunk.length - 1 && !currentChunk[idx + 1].includes('\n') ? ' ' : '');
+                              }
+                          });
+
                           computedPages.push({
                               entryId: entry.id,
                               pageNumber: globalPageNum++,
                               title: entry.title,
                               mood: entry.mood,
                               date: entry.date,
-                              body: currentPageLines.join('\n').trim(),
+                              body: pageText.trim(),
                               isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
                           });
-                          currentPageLines = [];
-                          currentLineCount = 0;
+
+                          // Reset counters for the next page segment boundary
+                          currentChunk = [];
+                          wordsOnThisPage = 0;
                       }
-
-                      currentPageLines.push(line);
-                      currentLineCount += estimatedVisualLines;
-                  });
-
-                  if (currentPageLines.length > 0) {
-                      computedPages.push({
-                          entryId: entry.id,
-                          pageNumber: globalPageNum++,
-                          title: entry.title,
-                          mood: entry.mood,
-                          date: entry.date,
-                          body: currentPageLines.join('\n').trim(),
-                          isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
-                      });
                   }
               });
 
