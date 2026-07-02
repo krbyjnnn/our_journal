@@ -115,17 +115,17 @@
                     </div>
 
                     <div x-show="spread === 'write'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <form action="/entries" method="POST" id="journalForm" class="space-y-4 flex-1 flex flex-col justify-between">
+                        <form action="/entries" method="POST" id="journalForm" class="h-full flex flex-col justify-between flex-1">
                             @csrf
-                            <div class="space-y-4">
+                            <div class="flex flex-col flex-1 space-y-4 mb-4">
                                 <div class="flex justify-between items-center border-b pb-1">
                                     <span class="text-xs font-bold text-zinc-400 uppercase">New Entry...</span>
                                 </div>
                                 <input type="text" name="title" required placeholder="Journal Title..." class="w-full bg-transparent border-b border-zinc-200 focus:outline-none text-lg font-bold text-zinc-800 py-1">
-                                <textarea name="content" required rows="8" placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed"></textarea>
+                                <textarea name="content" required placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed flex-1 h-full min-h-[180px]"></textarea>
                             </div>
                             
-                            <div class="space-y-2 pt-2">
+                            <div class="space-y-2 pt-2 border-t border-zinc-100">
                                 <div class="flex items-center space-x-3">
                                     <label class="text-xs font-bold text-zinc-400">Sticker Badge:</label>
                                     <select name="mood" class="bg-white border border-zinc-200 rounded-xl px-2 py-1 text-xs text-zinc-700 focus:outline-none">
@@ -144,18 +144,18 @@
                     </div>
 
                     <div x-show="spread === 'edit'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="space-y-4 flex-1 flex flex-col justify-between">
+                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="h-full flex flex-col justify-between flex-1">
                             @csrf
                             @method('PUT')
-                            <div class="space-y-4">
+                            <div class="flex flex-col flex-1 space-y-4 mb-4">
                                 <div class="flex justify-between items-center border-b pb-1">
                                     <span class="text-xs font-bold text-zinc-400 uppercase">Edit Entry...</span>
                                 </div>
                                 <input type="text" name="title" required x-model="editingEntry.title" placeholder="Journal Title..." class="w-full bg-transparent border-b border-zinc-200 focus:outline-none text-lg font-bold text-zinc-800 py-1">
-                                <textarea name="content" required rows="8" x-model="editingEntry.body" placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed"></textarea>
+                                <textarea name="content" required x-model="editingEntry.body" placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed flex-1 h-full min-h-[180px]"></textarea>
                             </div>
                             
-                            <div class="space-y-2 pt-2">
+                            <div class="space-y-2 pt-2 border-t border-zinc-100">
                                 <div class="flex items-center space-x-3">
                                     <label class="text-xs font-bold text-zinc-400">Sticker Badge:</label>
                                     <select name="mood" x-model="editingEntry.mood" class="bg-white border border-zinc-200 rounded-xl px-2 py-1 text-xs text-zinc-700 focus:outline-none">
