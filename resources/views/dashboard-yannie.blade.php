@@ -38,35 +38,45 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  // FIX: Match words OR single newlines so stanzas aren't deleted
-                  let tokens = entry.body.match(/\n|\S+/g) || [];
-                  let wordsPerPage = 170; 
-                  let chunkCount = Math.ceil(tokens.length / wordsPerPage) || 1;
+                  let tokens = entry.body.match(/\n+|\S+/g) || [];
 
-                  for (let i = 0; i < chunkCount; i++) {
-                      let start = i * wordsPerPage;
-                      let end = start + wordsPerPage;
-                      let tokenChunk = tokens.slice(start, end);
+                  // Safe word budget per page to stop bottom clipping on mobile
+                  let maxWordsPerPage = 85; 
 
-                      // Reconstruct the text elegantly while managing spaces around newlines
-                      let textChunk = '';
-                      tokenChunk.forEach((token, index) => {
-                          if (token === '\n') {
-                              textChunk += '\n';
-                          } else {
-                              textChunk += token + (index < tokenChunk.length - 1 && tokenChunk[index+1] !== '\n' ? ' ' : '');
-                          }
-                      });
+                  let currentChunk = [];
+                  let wordsOnThisPage = 0;
 
-                      computedPages.push({
-                          entryId: entry.id,
-                          pageNumber: globalPageNum++,
-                          title: entry.title,
-                          mood: entry.mood,
-                          date: entry.date,
-                          body: textChunk.trim() + (i < chunkCount - 1 ? ' ...' : ''),
-                          isContinuation: i > 0
-                      });
+                  for (let i = 0; i < tokens.length; i++) {
+                      let token = tokens[i];
+                      currentChunk.push(token);
+
+                      if (!token.includes('\n')) {
+                          wordsOnThisPage++;
+                      }
+
+                      if (wordsOnThisPage >= maxWordsPerPage || i === tokens.length - 1) {
+                          let pageText = '';
+                          currentChunk.forEach((t, idx) => {
+                              if (t.includes('\n')) {
+                                  pageText += t;
+                              } else {
+                                  pageText += t + (idx < currentChunk.length - 1 && !currentChunk[idx + 1].includes('\n') ? ' ' : '');
+                              }
+                          });
+
+                          computedPages.push({
+                              entryId: entry.id,
+                              pageNumber: globalPageNum++,
+                              title: entry.title,
+                              mood: entry.mood,
+                              date: entry.date,
+                              body: pageText.trim(),
+                              isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
+                          });
+
+                          currentChunk = [];
+                          wordsOnThisPage = 0;
+                      }
                   }
               });
 
@@ -79,17 +89,17 @@
           }
       }" 
       x-init="paginateBook()"
-      x-effect="spread || currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
+      x-effect="spread; currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
 
     <!-- OPEN BOOK SYSTEM -->
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
         <p class="md:hidden text-xs text-rose-300 text-center -mb-2">👉 Swipe to see the next page</p>
 
         <div x-ref="bookContainer" class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
-            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:min-h-[550px] md:border md:border-rose-500/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-rose-200/60 w-full">
+            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:min-h-[620px] md:border md:border-rose-500/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-rose-200/60 w-full">
 
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
+                <div class="w-full min-w-full h-[600px] md:h-auto overflow-hidden snap-start snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -102,7 +112,7 @@
 
                     <!-- State 2: Reading Mode (Left Page) -->
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
                             <div x-show="leftPage">
                                 <span class="text-xs font-bold text-rose-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(leftPage?.pageNumber).padStart(2, '0')"></span>
                                 <div class="flex items-center space-x-2 border-b border-rose-200 pb-3 mb-4">
@@ -115,7 +125,7 @@
                                 <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="leftPage?.body"></p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between pt-2">
+                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-rose-100/60 bg-white md:bg-transparent">
                             <span class="text-xs text-rose-300" x-text="pages[currentPageIndex * 2] ? 'Recorded on ' + pages[currentPageIndex * 2]?.date : ''"></span>
                             <div class="flex items-center space-x-3" x-show="leftPage">
                                 <button type="button" @click="startEdit(leftPage.entryId)" class="text-xs font-bold text-rose-300 hover:text-rose-500 transition-colors">✏️ Edit</button>
@@ -191,7 +201,7 @@
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
+                <div class="w-full min-w-full h-[600px] md:h-auto overflow-hidden snap-start snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -244,7 +254,7 @@
 
                     <!-- State 2: Reading Mode (Right Page) -->
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
                             
                             <!-- Display side-by-side if page exists -->
                             <div x-show="rightPage">
@@ -260,13 +270,13 @@
                             </div>
 
                             <!-- Empty right page layout prompt -->
-                            <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-8 text-center space-y-4 my-4 min-h-[300px]">
+                            <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-8 text-center space-y-4 my-2 flex-1">
                                 <span class="text-4xl">✍️</span>
                                 <h4 class="text-base font-bold text-slate-800">New Entry Sheet</h4>
                                 <p class="text-xs text-slate-400 max-w-[200px]">This side of the book is empty. Press Next to open up your drafting workspace!</p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between pt-2">
+                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-rose-100/60 bg-white md:bg-transparent">
                             <div class="flex items-center space-x-3" x-show="rightPage">
                                 <button type="button" @click="startEdit(rightPage.entryId)" class="text-xs font-bold text-rose-300 hover:text-rose-500 transition-colors">✏️ Edit</button>
                                 <form :action="'/entries/' + rightPage?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
@@ -281,7 +291,7 @@
 
                     <!-- State 3: Write Page Canvas Right Side Confirmation -->
                     <div x-show="spread === 'write'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-6 text-center space-y-4">
+                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-6 text-center space-y-4 h-full">
                             <span class="text-4xl">🔒</span>
                             <h4 class="text-base font-bold text-slate-800">Save this page?</h4>
                             <p class="text-xs text-slate-400 max-w-[200px]">Sure, save na talaga?</p>
@@ -293,7 +303,7 @@
 
                     <!-- State 4: Edit Confirmation Right Side -->
                     <div x-show="spread === 'edit'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-6 text-center space-y-4">
+                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-6 text-center space-y-4 h-full">
                             <span class="text-4xl">✏️</span>
                             <h4 class="text-base font-bold text-slate-800">Update this page?</h4>
                             <p class="text-xs text-slate-400 max-w-[200px]">Make sure everything looks right before saving.</p>
