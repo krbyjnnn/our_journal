@@ -12,9 +12,6 @@
         [x-cloak] { display: none !important; }
         .animate-fadeIn { animation: fadeIn 0.3s ease-in-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        /* Hides native scrollbars across layout view containers while preserving tactile fluid swiping */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .book-scroll::-webkit-scrollbar { display: none; }
         .book-scroll { -ms-overflow-style: none; scrollbar-width: none; scroll-behavior: smooth; }
     </style>
@@ -37,20 +34,57 @@
           totalEntries: {{ $entries->count() }},
           
           paginateBook() {
-              // FIXED: Map each database record directly to a clean 1-to-1 page instance to prevent words being clipped halfway
               let computedPages = [];
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  computedPages.push({
-                      entryId: entry.id,
-                      pageNumber: globalPageNum++,
-                      title: entry.title,
-                      mood: entry.mood,
-                      date: entry.date,
-                      body: entry.body.trim(),
-                      isContinuation: false
+                  let lines = entry.body.split('\n');
+                  let currentPageLines = [];
+                  let currentLineCount = 0;
+                  
+                  // FIXED: 16 visual lines maximizes vertical spacing beautifully
+                  let maxLinesPerPage = 16; 
+                  // FIXED: 45 chars handles typical word wrapping without underestimating space
+                  let charsPerLine = 45; 
+
+                  lines.forEach((line) => {
+                      let estimatedVisualLines = 0;
+
+                      if (line.trim().length === 0) {
+                          estimatedVisualLines = 1;
+                      } else {
+                          estimatedVisualLines = Math.max(1, Math.ceil(line.length / charsPerLine));
+                      }
+
+                      if (currentLineCount + estimatedVisualLines > maxLinesPerPage && currentPageLines.length > 0) {
+                          computedPages.push({
+                              entryId: entry.id,
+                              pageNumber: globalPageNum++,
+                              title: entry.title,
+                              mood: entry.mood,
+                              date: entry.date,
+                              body: currentPageLines.join('\n').trim(),
+                              isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
+                          });
+                          currentPageLines = [];
+                          currentLineCount = 0;
+                      }
+
+                      currentPageLines.push(line);
+                      currentLineCount += estimatedVisualLines;
                   });
+
+                  if (currentPageLines.length > 0) {
+                      computedPages.push({
+                          entryId: entry.id,
+                          pageNumber: globalPageNum++,
+                          title: entry.title,
+                          mood: entry.mood,
+                          date: entry.date,
+                          body: currentPageLines.join('\n').trim(),
+                          isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
+                      });
+                  }
               });
 
               this.pages = computedPages;
@@ -81,24 +115,25 @@
                         <div class="text-xs text-zinc-400">My thoughts? ✨</div>
                     </div>
 
-                    <div x-show="spread === 'read'" class="h-full flex flex-col justify-between overflow-hidden animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col overflow-hidden" x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
-                            <div x-show="leftPage" class="h-full flex flex-col overflow-hidden">
+                    <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
+                            <div x-show="leftPage">
                                 <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(leftPage?.pageNumber).padStart(2, '0')"></span>
-                                <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4 flex-shrink-0">
+                                <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4">
                                     <span class="text-2xl" x-text="leftPage?.mood"></span>
                                     <h3 class="text-xl font-bold text-zinc-800 truncate" x-text="leftPage?.title"></h3>
+                                    <template x-if="leftPage?.isContinuation">
+                                        <span class="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md font-medium ml-2">Cont.</span>
+                                    </template>
                                 </div>
-                                <div class="flex-1 overflow-y-auto no-scrollbar pr-1 pb-4">
-                                    <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="leftPage?.body"></p>
-                                </div>
+                                <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="leftPage?.body"></p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-100/60 bg-[#fafafa] md:bg-transparent flex-shrink-0">
+                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-100/60 bg-[#fafafa] md:bg-transparent">
                             <span class="text-xs text-zinc-400" x-text="pages[currentPageIndex * 2] ? 'Logged on ' + pages[currentPageIndex * 2]?.date : ''"></span>
-                            <div class="flex items-center space-x-3" x-show="pages[currentPageIndex * 2]">
-                                <button type="button" @click="startEdit(pages[currentPageIndex * 2].entryId)" class="text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors">✏️ Edit</button>
-                                <form :action="'/entries/' + pages[currentPageIndex * 2]?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
+                            <div class="flex items-center space-x-3" x-show="leftPage">
+                                <button type="button" @click="startEdit(leftPage.entryId)" class="text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors">✏️ Edit</button>
+                                <form :action="'/entries/' + leftPage?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-xs font-bold text-rose-400 hover:text-rose-600 transition-colors">🗑️ Delete</button>
@@ -175,7 +210,7 @@
                                 <h3 class="text-xl font-bold text-zinc-800">Index</h3>
                                 <span class="text-xs font-bold text-zinc-400 uppercase">Chapters ({{ $entries->count() }})</span>
                             </div>
-                            <div class="overflow-y-auto max-h-[380px] space-y-2 pr-1 no-scrollbar">
+                            <div class="overflow-y-auto max-h-[380px] space-y-2 pr-1">
                                 <template x-for="(page, idx) in pages" :key="idx">
                                     <div x-show="!page.isContinuation"
                                          class="flex items-center justify-between p-3 rounded-xl hover:bg-zinc-100 transition-all border border-transparent hover:border-zinc-200 group">
@@ -216,18 +251,19 @@
                         <div class="flex justify-end pt-4">                        </div>
                     </div>
 
-                    <div x-show="spread === 'read'" class="h-full flex flex-col justify-between overflow-hidden animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col overflow-hidden" x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
+                    <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
                             
-                            <div x-show="rightPage" class="h-full flex flex-col overflow-hidden">
+                            <div x-show="rightPage">
                                 <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(rightPage?.pageNumber).padStart(2, '0')"></span>
-                                <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4 flex-shrink-0">
+                                <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4">
                                     <span class="text-2xl" x-text="rightPage?.mood"></span>
                                     <h3 class="text-xl font-bold text-slate-800 truncate" x-text="rightPage?.title"></h3>
+                                    <template x-if="rightPage?.isContinuation">
+                                        <span class="text-xs bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md font-medium ml-2">Cont.</span>
+                                    </template>
                                 </div>
-                                <div class="flex-1 overflow-y-auto no-scrollbar pr-1 pb-4">
-                                    <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="rightPage?.body"></p>
-                                </div>
+                                <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="rightPage?.body"></p>
                             </div>
 
                             <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-8 text-center space-y-4 my-2 flex-1">
@@ -236,10 +272,10 @@
                                 <p class="text-xs text-zinc-400 max-w-[200px]">If you come across this clean slate, go to the next page to write a new one, baby!</p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-100/60 bg-[#fafafa] md:bg-transparent flex-shrink-0">
-                            <div class="flex items-center space-x-3" x-show="pages[(currentPageIndex * 2) + 1]">
-                                <button type="button" @click="startEdit(pages[(currentPageIndex * 2) + 1].entryId)" class="text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors">✏️ Edit</button>
-                                <form :action="'/entries/' + pages[(currentPageIndex * 2) + 1]?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
+                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-100/60 bg-[#fafafa] md:bg-transparent">
+                            <div class="flex items-center space-x-3" x-show="rightPage">
+                                <button type="button" @click="startEdit(rightPage.entryId)" class="text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors">✏️ Edit</button>
+                                <form :action="'/entries/' + rightPage?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-xs font-bold text-rose-400 hover:text-rose-600 transition-colors">🗑️ Delete</button>
