@@ -65,12 +65,13 @@
 
     <!-- OPEN BOOK SYSTEM -->
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
-        <p class="md:hidden text-xs text-rose-300 text-center -mb-2">👉 Swipe to turn the page</p>
-        <div class="w-full bg-rose-400/10 border border-rose-500/10 rounded-[2.5rem] shadow-2xl p-4 md:p-8">
-            <div class="book-scroll flex md:grid md:grid-cols-2 overflow-x-auto md:overflow-visible snap-x snap-mandatory bg-white rounded-[2rem] shadow-inner divide-x divide-rose-200/60 min-h-[550px] relative">
-                
+        <p class="md:hidden text-xs text-rose-300 text-center -mb-2">👉 Swipe to see the next page</p>
+
+        <div class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
+            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:divide-x md:divide-rose-200/60 md:min-h-[550px] md:border md:border-rose-500/10 md:p-8 gap-4 md:gap-0">
+
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full bg-gradient-to-l from-transparent to-rose-50/50">
+                <div class="min-w-[90%] md:min-w-0 snap-center flex-shrink-0 bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -131,7 +132,7 @@
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full">
+                <div class="min-w-[90%] md:min-w-0 snap-center flex-shrink-0 bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">

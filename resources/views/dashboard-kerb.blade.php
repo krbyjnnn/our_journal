@@ -65,13 +65,13 @@
 
     <!-- OPEN BOOK SYSTEM -->
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
-        <p class="md:hidden text-xs text-zinc-400 text-center -mb-2">👉 Swipe to turn the page</p>
-        <!-- Minimalist Black & White Border Outline -->
-        <div class="w-full bg-zinc-800/5 border border-zinc-900/10 rounded-[2.5rem] shadow-2xl p-4 md:p-8">
-            <div class="book-scroll flex md:grid md:grid-cols-2 overflow-x-auto md:overflow-visible snap-x snap-mandatory bg-[#fafafa] rounded-[2rem] shadow-inner min-h-[550px] divide-x divide-zinc-200 relative">
-                
+        <p class="md:hidden text-xs text-zinc-400 text-center -mb-2">👉 Swipe to see the next page</p>
+
+        <div class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
+            <div class="flex md:grid md:grid-cols-2 md:bg-[#fafafa] md:rounded-[2rem] md:shadow-inner md:divide-x md:divide-zinc-200 md:min-h-[550px] md:border md:border-zinc-900/10 md:p-8 gap-4 md:gap-0">
+
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full bg-gradient-to-l from-transparent to-zinc-50">
+                <div class="min-w-[90%] md:min-w-0 snap-center flex-shrink-0 bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -134,7 +134,7 @@
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="min-w-full md:min-w-0 snap-center flex-shrink-0 p-6 md:p-10 flex flex-col justify-between h-full">
+                <div class="min-w-[90%] md:min-w-0 snap-center flex-shrink-0 bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
