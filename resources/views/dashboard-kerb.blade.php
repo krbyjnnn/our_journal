@@ -38,15 +38,15 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  // FIXED: Split text by lines to accurately map visual layout heights
                   let lines = entry.body.split('\n');
                   let currentPageLines = [];
                   let currentLineCount = 0;
-                  let maxLinesPerPage = 11; // Caps lines perfectly within h-[560px] bounds
+                  // FIXED: Increased limit to 13 lines to fit the container perfectly without trailing empty spaces
+                  let maxLinesPerPage = 13; 
 
                   lines.forEach((line) => {
-                      // Estimate how many lines a single long paragraph line wraps into on mobile screens (~35 chars per line)
-                      let estimatedVisualLines = Math.max(1, Math.ceil(line.length / 32));
+                      // FIXED: Changed wrap calculator to 50 characters to match real mobile layout rendering
+                      let estimatedVisualLines = Math.max(1, Math.ceil(line.length / 50));
 
                       if (currentLineCount + estimatedVisualLines > maxLinesPerPage && currentPageLines.length > 0) {
                           computedPages.push({
