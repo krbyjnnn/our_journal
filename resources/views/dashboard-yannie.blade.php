@@ -21,13 +21,13 @@
           spread: 'index', 
           currentPageIndex: 0, 
           pages: [], 
-          rawEntries: @json($entries->sortBy('created_at')->values()->map(fn($e) => [
-              'id' => $e->id,
-              'title' => $e->title,
-              'body' => $e->body,
-              'mood' => $e->mood,
-              'date' => $e->created_at->format('m/d'),
-          ])),
+            rawEntries: {!! json_encode($entries->sortBy('created_at')->values()->map(fn($e) => [
+                'id' => $e->id,
+                'title' => $e->title,
+                'body' => $e->body,
+                'mood' => $e->mood,
+                'date' => $e->created_at->format('m/d'),
+            ])) !!},
           editingEntry: null,
           totalEntries: {{ $entries->count() }},
           
