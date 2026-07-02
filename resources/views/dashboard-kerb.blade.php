@@ -74,7 +74,7 @@
         <div class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
             <div class="flex md:grid md:grid-cols-2 md:bg-[#fafafa] md:rounded-[2rem] md:shadow-inner md:min-h-[550px] md:border md:border-zinc-900/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-zinc-200 w-full">
 
-                <div class="w-full min-w-full md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
+                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
                     
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
@@ -172,7 +172,7 @@
                     </div>
                 </div>
 
-                <div class="w-full min-w-full md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
+                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
