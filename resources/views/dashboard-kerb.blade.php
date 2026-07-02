@@ -38,52 +38,46 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  let lines = entry.body.split('\n');
-                  let currentPageLines = [];
-                  let currentLineCount = 0;
-                  // FIXED: Increased maxLinesPerPage to 16 to drive the text block all the way down the card layout
-                  let maxLinesPerPage = 16; 
+                  // Capture both regular words and raw newline strings so structural layout details don't get lost
+                  let tokens = entry.body.match(/\n+|\S+/g) || [];
+                  let maxWordsPerPage = 135; // Tuned word target to utilize the card length perfectly on mobile views
+                  
+                  let currentChunk = [];
+                  let wordCountThisPage = 0;
 
-                  lines.forEach((line) => {
-                      let trimmed = line.trim();
-                      let estimatedVisualLines = 0;
+                  for (let i = 0; i < tokens.length; i++) {
+                      let token = tokens[i];
+                      currentChunk.push(token);
 
-                      if (trimmed.length === 0) {
-                          // FIXED: Empty spaces or clean breaks only consume minimal line height footprint
-                          estimatedVisualLines = 0.5;
-                      } else {
-                          // FIXED: Loosened character tracking to 65 to utilize full width before generating text-overflow breaks
-                          estimatedVisualLines = Math.max(1, Math.ceil(trimmed.length / 65));
+                      // Only count actual visual words toward our page size budget, not newlines
+                      if (!token.includes('\n')) {
+                          wordCountThisPage++;
                       }
 
-                      if (currentLineCount + estimatedVisualLines > maxLinesPerPage && currentPageLines.length > 0) {
+                      // Once the page satisfies our capacity limit OR we reach the end of the text string
+                      if (wordCountThisPage >= maxWordsPerPage || i === tokens.length - 1) {
+                          let textChunk = '';
+                          currentChunk.forEach((t, idx) => {
+                              if (t.includes('\n')) {
+                                  textChunk += t;
+                              } else {
+                                  textChunk += t + (idx < currentChunk.length - 1 && !currentChunk[idx + 1].includes('\n') ? ' ' : '');
+                              }
+                          });
+
                           computedPages.push({
                               entryId: entry.id,
                               pageNumber: globalPageNum++,
                               title: entry.title,
                               mood: entry.mood,
                               date: entry.date,
-                              body: currentPageLines.join('\n').trim() + ' ...',
+                              body: textChunk.trim() + (i < tokens.length - 1 ? ' ...' : ''),
                               isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
                           });
-                          currentPageLines = [];
-                          currentLineCount = 0;
+
+                          currentChunk = [];
+                          wordCountThisPage = 0;
                       }
-
-                      currentPageLines.push(line);
-                      currentLineCount += estimatedVisualLines;
-                  });
-
-                  if (currentPageLines.length > 0) {
-                      computedPages.push({
-                          entryId: entry.id,
-                          pageNumber: globalPageNum++,
-                          title: entry.title,
-                          mood: entry.mood,
-                          date: entry.date,
-                          body: currentPageLines.join('\n').trim(),
-                          isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
-                      });
                   }
               });
 
