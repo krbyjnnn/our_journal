@@ -38,33 +38,43 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  let tokens = entry.body.match(/\n|\S+/g) || [];
-                  // FIXED: Dropped word limit to 100 so stanzas effortlessly map onto the next page instead of breaking into scroll lines
-                  let wordsPerPage = 100; 
-                  let chunkCount = Math.ceil(tokens.length / wordsPerPage) || 1;
+                  // FIXED: Split text by lines to accurately map visual layout heights
+                  let lines = entry.body.split('\n');
+                  let currentPageLines = [];
+                  let currentLineCount = 0;
+                  let maxLinesPerPage = 11; // Caps lines perfectly within h-[560px] bounds
 
-                  for (let i = 0; i < chunkCount; i++) {
-                      let start = i * wordsPerPage;
-                      let end = start + wordsPerPage;
-                      let tokenChunk = tokens.slice(start, end);
+                  lines.forEach((line) => {
+                      // Estimate how many lines a single long paragraph line wraps into on mobile screens (~35 chars per line)
+                      let estimatedVisualLines = Math.max(1, Math.ceil(line.length / 32));
 
-                      let textChunk = '';
-                      tokenChunk.forEach((token, index) => {
-                          if (token === '\n') {
-                              textChunk += '\n';
-                          } else {
-                              textChunk += token + (index < tokenChunk.length - 1 && tokenChunk[index+1] !== '\n' ? ' ' : '');
-                          }
-                      });
+                      if (currentLineCount + estimatedVisualLines > maxLinesPerPage && currentPageLines.length > 0) {
+                          computedPages.push({
+                              entryId: entry.id,
+                              pageNumber: globalPageNum++,
+                              title: entry.title,
+                              mood: entry.mood,
+                              date: entry.date,
+                              body: currentPageLines.join('\n').trim() + ' ...',
+                              isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
+                          });
+                          currentPageLines = [];
+                          currentLineCount = 0;
+                      }
 
+                      currentPageLines.push(line);
+                      currentLineCount += estimatedVisualLines;
+                  });
+
+                  if (currentPageLines.length > 0) {
                       computedPages.push({
                           entryId: entry.id,
                           pageNumber: globalPageNum++,
                           title: entry.title,
                           mood: entry.mood,
                           date: entry.date,
-                          body: textChunk.trim() + (i < chunkCount - 1 ? ' ...' : ''),
-                          isContinuation: i > 0
+                          body: currentPageLines.join('\n').trim(),
+                          isContinuation: computedPages.length > 0 && computedPages[computedPages.length - 1].entryId === entry.id
                       });
                   }
               });
@@ -86,7 +96,7 @@
         <div x-ref="bookContainer" class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
             <div class="flex md:grid md:grid-cols-2 md:bg-[#fafafa] md:rounded-[2rem] md:shadow-inner md:min-h-[620px] md:border md:border-zinc-900/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-zinc-200 w-full">
 
-                <div class="w-full min-w-full h-[560px] md:h-auto snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
+                <div class="w-full min-w-full h-[560px] md:h-auto overflow-hidden snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
                     
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
@@ -98,7 +108,7 @@
                     </div>
 
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col justify-between" x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
                             <div x-show="leftPage">
                                 <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(leftPage?.pageNumber).padStart(2, '0')"></span>
                                 <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4">
@@ -184,7 +194,7 @@
                     </div>
                 </div>
 
-                <div class="w-full min-w-full h-[560px] md:h-auto snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
+                <div class="w-full min-w-full h-[560px] md:h-auto overflow-hidden snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
@@ -234,7 +244,7 @@
                     </div>
 
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col justify-between" x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
                             
                             <div x-show="rightPage">
                                 <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(rightPage?.pageNumber).padStart(2, '0')"></span>
