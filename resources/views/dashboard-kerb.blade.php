@@ -78,13 +78,14 @@
       }" 
       x-init="paginateBook()"
       x-effect="spread; currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
-      <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
+
+    <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
         <p class="md:hidden text-xs text-zinc-400 text-center -mb-2">👉 Swipe to see the next page</p>
 
         <div x-ref="bookContainer" class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
-            <div class="flex md:grid md:grid-cols-2 md:bg-[#fafafa] md:rounded-[2rem] md:shadow-inner md:min-h-[550px] md:border md:border-zinc-900/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-zinc-200 w-full">
+            <div class="flex md:grid md:grid-cols-2 md:bg-[#fafafa] md:rounded-[2rem] md:shadow-inner md:min-h-[580px] md:border md:border-zinc-900/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-zinc-200 w-full">
 
-                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
+                <div class="w-full min-w-full h-[520px] md:h-auto snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-zinc-50">
                     
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
@@ -96,8 +97,8 @@
                     </div>
 
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
-                            <div x-show="leftPage">
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
+                            <div x-show="leftPage" class="overflow-y-auto pr-1">
                                 <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(leftPage?.pageNumber).padStart(2, '0')"></span>
                                 <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4">
                                     <span class="text-2xl" x-text="leftPage?.mood"></span>
@@ -109,7 +110,7 @@
                                 <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="leftPage?.body"></p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between pt-2">
+                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-100/60 bg-[#fafafa] md:bg-transparent">
                             <span class="text-xs text-zinc-400" x-text="pages[currentPageIndex * 2] ? 'Logged on ' + pages[currentPageIndex * 2]?.date : ''"></span>
                             <div class="flex items-center space-x-3" x-show="leftPage">
                                 <button type="button" @click="startEdit(leftPage.entryId)" class="text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors">✏️ Edit</button>
@@ -123,14 +124,14 @@
                     </div>
 
                     <div x-show="spread === 'write'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <form action="/entries" method="POST" id="journalForm" class="h-full flex flex-col justify-between flex-1">
+                        <form action="/entries" method="POST" id="journalForm" class="h-full flex flex-col justify-between flex-1 overflow-hidden">
                             @csrf
-                            <div class="flex flex-col flex-1 space-y-4 mb-4">
+                            <div class="flex flex-col flex-1 space-y-4 mb-4 overflow-hidden">
                                 <div class="flex justify-between items-center border-b pb-1">
                                     <span class="text-xs font-bold text-zinc-400 uppercase">New Entry...</span>
                                 </div>
                                 <input type="text" name="title" required placeholder="Journal Title..." class="w-full bg-transparent border-b border-zinc-200 focus:outline-none text-lg font-bold text-zinc-800 py-1">
-                                <textarea name="content" required placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed flex-1 h-full min-h-[180px]"></textarea>
+                                <textarea name="content" required placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed flex-1 h-full"></textarea>
                             </div>
                             
                             <div class="space-y-2 pt-2 border-t border-zinc-100">
@@ -152,15 +153,15 @@
                     </div>
 
                     <div x-show="spread === 'edit'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="h-full flex flex-col justify-between flex-1">
+                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="h-full flex flex-col justify-between flex-1 overflow-hidden">
                             @csrf
                             @method('PUT')
-                            <div class="flex flex-col flex-1 space-y-4 mb-4">
+                            <div class="flex flex-col flex-1 space-y-4 mb-4 overflow-hidden">
                                 <div class="flex justify-between items-center border-b pb-1">
                                     <span class="text-xs font-bold text-zinc-400 uppercase">Edit Entry...</span>
                                 </div>
                                 <input type="text" name="title" required x-model="editingEntry.title" placeholder="Journal Title..." class="w-full bg-transparent border-b border-zinc-200 focus:outline-none text-lg font-bold text-zinc-800 py-1">
-                                <textarea name="content" required x-model="editingEntry.body" placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed flex-1 h-full min-h-[180px]"></textarea>
+                                <textarea name="content" required x-model="editingEntry.body" placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed flex-1 h-full"></textarea>
                             </div>
                             
                             <div class="space-y-2 pt-2 border-t border-zinc-100">
@@ -182,7 +183,7 @@
                     </div>
                 </div>
 
-                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
+                <div class="w-full min-w-full h-[520px] md:h-auto snap-start snap-always flex-shrink-0 box-border bg-[#fafafa] md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-zinc-900/10 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
@@ -190,7 +191,7 @@
                                 <h3 class="text-xl font-bold text-zinc-800">Index</h3>
                                 <span class="text-xs font-bold text-zinc-400 uppercase">Chapters ({{ $entries->count() }})</span>
                             </div>
-                            <div class="overflow-y-auto max-h-[380px] space-y-2 pr-1">
+                            <div class="overflow-y-auto max-h-[350px] space-y-2 pr-1">
                                 <template x-for="(page, idx) in pages" :key="idx">
                                     <div x-show="!page.isContinuation"
                                          class="flex items-center justify-between p-3 rounded-xl hover:bg-zinc-100 transition-all border border-transparent hover:border-zinc-200 group">
@@ -232,9 +233,9 @@
                     </div>
 
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
+                        <div class="flex-1 flex flex-col justify-between overflow-hidden" x-data="{ rightPage: null }" x-effect="rightPage = pages[(currentPageIndex * 2) + 1]">
                             
-                            <div x-show="rightPage">
+                            <div x-show="rightPage" class="overflow-y-auto pr-1">
                                 <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(rightPage?.pageNumber).padStart(2, '0')"></span>
                                 <div class="flex items-center space-x-2 border-b border-zinc-200 pb-3 mb-4">
                                     <span class="text-2xl" x-text="rightPage?.mood"></span>
@@ -246,13 +247,13 @@
                                 <p class="text-zinc-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="rightPage?.body"></p>
                             </div>
 
-                            <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-8 text-center space-y-4 my-4 min-h-[300px]">
+                            <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-8 text-center space-y-4 my-2 flex-1">
                                 <span class="text-4xl">✒️</span>
                                 <h4 class="text-base font-bold text-zinc-800">Clean Slate</h4>
                                 <p class="text-xs text-zinc-400 max-w-[200px]">If you come across this clean slate, go to the next page to write a new one, baby!</p>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between pt-2">
+                        <div class="flex items-center justify-between pt-4 mt-2 border-t border-zinc-100/60 bg-[#fafafa] md:bg-transparent">
                             <div class="flex items-center space-x-3" x-show="rightPage">
                                 <button type="button" @click="startEdit(rightPage.entryId)" class="text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors">✏️ Edit</button>
                                 <form :action="'/entries/' + rightPage?.entryId" method="POST" @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
@@ -266,7 +267,7 @@
                     </div>
 
                     <div x-show="spread === 'write'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-6 text-center space-y-4">
+                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-6 text-center space-y-4 h-full">
                             <span class="text-4xl">🔒</span>
                             <h4 class="text-base font-bold text-zinc-800">Save this page?</h4>
                             <p class="text-xs text-zinc-400 max-w-[200px]">Sure, save na talaga?</p>
@@ -277,7 +278,7 @@
                     </div>
 
                     <div x-show="spread === 'edit'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-6 text-center space-y-4">
+                        <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-6 text-center space-y-4 h-full">
                             <span class="text-4xl">✏️</span>
                             <h4 class="text-base font-bold text-zinc-800">Update this page?</h4>
                             <p class="text-xs text-zinc-400 max-w-[200px]">Make sure everything looks right before saving.</p>
