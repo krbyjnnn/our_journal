@@ -41,7 +41,7 @@
                   let tokens = entry.body.match(/\n+|\S+/g) || [];
                   
                   // FIXED: Changed budget to a safe 65 words per page to stop any bottom clipping on mobile
-                  let maxWordsPerPage = 65; 
+                  let maxWordsPerPage = 100; 
                   
                   let currentChunk = [];
                   let wordsOnThisPage = 0;
