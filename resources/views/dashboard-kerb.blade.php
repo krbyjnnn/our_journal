@@ -41,12 +41,20 @@
                   let lines = entry.body.split('\n');
                   let currentPageLines = [];
                   let currentLineCount = 0;
-                  // FIXED: Increased limit to 13 lines to fit the container perfectly without trailing empty spaces
-                  let maxLinesPerPage = 13; 
+                  // FIXED: Increased maxLinesPerPage to 16 to drive the text block all the way down the card layout
+                  let maxLinesPerPage = 16; 
 
                   lines.forEach((line) => {
-                      // FIXED: Changed wrap calculator to 50 characters to match real mobile layout rendering
-                      let estimatedVisualLines = Math.max(1, Math.ceil(line.length / 50));
+                      let trimmed = line.trim();
+                      let estimatedVisualLines = 0;
+
+                      if (trimmed.length === 0) {
+                          // FIXED: Empty spaces or clean breaks only consume minimal line height footprint
+                          estimatedVisualLines = 0.5;
+                      } else {
+                          // FIXED: Loosened character tracking to 65 to utilize full width before generating text-overflow breaks
+                          estimatedVisualLines = Math.max(1, Math.ceil(trimmed.length / 65));
+                      }
 
                       if (currentLineCount + estimatedVisualLines > maxLinesPerPage && currentPageLines.length > 0) {
                           computedPages.push({
