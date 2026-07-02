@@ -189,8 +189,8 @@
                     <!-- State 3: Write Page Canvas Right Side Confirmation -->
                     <div x-show="spread === 'write'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
                         <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-rose-200 bg-rose-50/40 rounded-2xl p-6 text-center space-y-4">
-                            <span class="text-4xl">📚</span>
-                            <h4 class="text-base font-bold text-slate-800">Ready to bind this sheet?</h4>
+                            <span class="text-4xl">🔒</span>
+                            <h4 class="text-base font-bold text-slate-800">Save this page?</h4>
                             <p class="text-xs text-slate-400 max-w-[200px]">Sure, save na talaga?</p>
                             <button type="submit" form="journalForm" class="py-2.5 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-sm transition-all">
                                 Save to Journal

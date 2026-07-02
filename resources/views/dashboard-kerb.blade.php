@@ -107,7 +107,7 @@
                                     <span class="text-xs font-bold text-zinc-400 uppercase">New Entry...</span>
                                 </div>
                                 <input type="text" name="title" required placeholder="Journal Title..." class="w-full bg-transparent border-b border-zinc-200 focus:outline-none text-lg font-bold text-zinc-800 py-1">
-                                <textarea name="content" required rows="8" placeholder="What's on your mind?" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed"></textarea>
+                                <textarea name="content" required rows="8" placeholder="What's on your mind? My baby!" class="w-full bg-transparent resize-none focus:outline-none text-zinc-600 text-sm leading-relaxed"></textarea>
                             </div>
                             
                             <div class="space-y-2 pt-2">
@@ -154,7 +154,7 @@
                                     </div>
                                 </template>
                                 <div x-show="pages.length === 0" class="text-zinc-400 text-sm text-center py-16">
-                                    Your diary is empty. Press Next to write your first log.
+                                    Your journal is empty. Press Next to write your first log.
                                 </div>
                             </div>
                         </div>
@@ -193,7 +193,7 @@
                         <div class="flex-1 flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-6 text-center space-y-4">
                             <span class="text-4xl">🔒</span>
                             <h4 class="text-base font-bold text-zinc-800">Save this page?</h4>
-                            <p class="text-xs text-zinc-400 max-w-[200px]">Once saved, your paragraphs will automatically distribute flawlessly across your pages.</p>
+                            <p class="text-xs text-zinc-400 max-w-[200px]">Sure, save na talaga?</p>
                             <button type="submit" form="journalForm" class="py-2.5 px-6 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-md transition-all">
                                 Save to Journal
                             </button>
