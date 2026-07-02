@@ -21,13 +21,15 @@
           spread: 'index', 
           currentPageIndex: 0, 
           pages: [], 
-            rawEntries: {!! json_encode($entries->sortBy('created_at')->values()->map(fn($e) => [
-                'id' => $e->id,
-                'title' => $e->title,
-                'body' => $e->body,
-                'mood' => $e->mood,
-                'date' => $e->created_at->format('m/d'),
-            ])) !!},
+          rawEntries: {{ Js::from($entries->sortBy('created_at')->values()->map(function($e) {
+              return [
+                  'id' => $e->id,
+                  'title' => $e->title,
+                  'body' => $e->body,
+                  'mood' => $e->mood,
+                  'date' => $e->created_at->format('m/d'),
+              ];
+          })) }},
           editingEntry: null,
           totalEntries: {{ $entries->count() }},
           
@@ -36,14 +38,25 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  let words = entry.body.split(/\s+/);
-                  let wordsPerPage = 85; 
-                  let chunkCount = Math.ceil(words.length / wordsPerPage) || 1;
+                  // FIX: Match words OR single newlines so stanzas aren't deleted
+                  let tokens = entry.body.match(/\n|\S+/g) || [];
+                  let wordsPerPage = 170; 
+                  let chunkCount = Math.ceil(tokens.length / wordsPerPage) || 1;
 
                   for (let i = 0; i < chunkCount; i++) {
                       let start = i * wordsPerPage;
                       let end = start + wordsPerPage;
-                      let textChunk = words.slice(start, end).join(' ');
+                      let tokenChunk = tokens.slice(start, end);
+
+                      // Reconstruct the text elegantly while managing spaces around newlines
+                      let textChunk = '';
+                      tokenChunk.forEach((token, index) => {
+                          if (token === '\n') {
+                              textChunk += '\n';
+                          } else {
+                              textChunk += token + (index < tokenChunk.length - 1 && tokenChunk[index+1] !== '\n' ? ' ' : '');
+                          }
+                      });
 
                       computedPages.push({
                           entryId: entry.id,
@@ -51,7 +64,7 @@
                           title: entry.title,
                           mood: entry.mood,
                           date: entry.date,
-                          body: textChunk + (i < chunkCount - 1 ? ' ...' : ''),
+                          body: textChunk.trim() + (i < chunkCount - 1 ? ' ...' : ''),
                           isContinuation: i > 0
                       });
                   }
@@ -64,17 +77,19 @@
               this.editingEntry = JSON.parse(JSON.stringify(this.rawEntries.find(e => e.id === entryId)));
               this.spread = 'edit';
           }
-      }" x-init="paginateBook()">
+      }" 
+      x-init="paginateBook()"
+      x-effect="spread || currentPageIndex; $nextTick(() => { if ($refs.bookContainer) $refs.bookContainer.scrollLeft = 0 })">
 
     <!-- OPEN BOOK SYSTEM -->
     <div class="w-full max-w-5xl flex flex-col items-center space-y-6">
         <p class="md:hidden text-xs text-rose-300 text-center -mb-2">👉 Swipe to see the next page</p>
 
-        <div class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
-            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:divide-x md:divide-rose-200/60 md:min-h-[550px] md:border md:border-rose-500/10 md:p-8 gap-0 md:gap-0">
+        <div x-ref="bookContainer" class="book-scroll w-full flex md:block overflow-x-auto md:overflow-visible snap-x snap-mandatory">
+            <div class="flex md:grid md:grid-cols-2 md:bg-white md:rounded-[2rem] md:shadow-inner md:min-h-[550px] md:border md:border-rose-500/10 md:p-8 gap-0 md:gap-0 md:divide-x md:divide-rose-200/60 w-full">
 
                 <!-- ================= LEFT PAGE ================= -->
-                <div class="w-full md:min-w-0 snap-center snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
+                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between md:bg-gradient-to-l md:from-transparent md:to-rose-50/50">
                     
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -89,7 +104,7 @@
                     <div x-show="spread === 'read'" class="h-full flex flex-col justify-between animate-fadeIn" x-cloak>
                         <div x-data="{ leftPage: null }" x-effect="leftPage = pages[currentPageIndex * 2]">
                             <div x-show="leftPage">
-                                <span class="text-xs font-bold text-rose-400 tracking-wide block mb-4" x-text="'📖 PAGE 0' + leftPage?.pageNumber"></span>
+                                <span class="text-xs font-bold text-rose-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(leftPage?.pageNumber).padStart(2, '0')"></span>
                                 <div class="flex items-center space-x-2 border-b border-rose-200 pb-3 mb-4">
                                     <span class="text-2xl" x-text="leftPage?.mood"></span>
                                     <h3 class="text-xl font-bold text-slate-800 truncate" x-text="leftPage?.title"></h3>
@@ -97,7 +112,7 @@
                                         <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-medium ml-2">Cont.</span>
                                     </template>
                                 </div>
-                                <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap select-text" x-text="leftPage?.body"></p>
+                                <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="leftPage?.body"></p>
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2">
@@ -115,17 +130,17 @@
 
                     <!-- State 3: Write Page Form Canvas Left Side -->
                     <div x-show="spread === 'write'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <form action="/entries" method="POST" id="journalForm" class="space-y-4 flex-1 flex flex-col justify-between">
+                        <form action="/entries" method="POST" id="journalForm" class="h-full flex flex-col justify-between flex-1">
                             @csrf
-                            <div class="space-y-4">
+                            <div class="flex flex-col flex-1 space-y-4 mb-4">
                                 <div class="flex justify-between items-center border-b pb-1">
                                     <span class="text-xs font-bold text-rose-400 uppercase">New Entry...</span>
                                 </div>
                                 <input type="text" name="title" required placeholder=" Journal Title..." class="w-full bg-transparent border-b border-rose-200/60 focus:outline-none text-lg font-bold text-slate-800 py-1">
-                                <textarea name="content" required rows="8" placeholder="What's on your mind?" class="w-full bg-transparent resize-none focus:outline-none text-slate-600 text-sm leading-relaxed"></textarea>
+                                <textarea name="content" required placeholder="What's on your mind?" class="w-full bg-transparent resize-none focus:outline-none text-slate-600 text-sm leading-relaxed flex-1 h-full min-h-[180px]"></textarea>
                             </div>
                             
-                            <div class="space-y-2 pt-2">
+                            <div class="space-y-2 pt-2 border-t border-rose-100">
                                 <div class="flex items-center space-x-3">
                                     <label class="text-xs font-bold text-slate-400">Sticker badge:</label>
                                     <select name="mood" class="bg-white border border-rose-200 rounded-xl px-2 py-1 text-xs text-slate-700">
@@ -145,18 +160,18 @@
 
                     <!-- State 4: Edit Entry Form Canvas Left Side -->
                     <div x-show="spread === 'edit'" class="w-full text-left h-full flex flex-col justify-between animate-fadeIn" x-cloak>
-                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="space-y-4 flex-1 flex flex-col justify-between">
+                        <form :action="'/entries/' + editingEntry?.id" method="POST" id="editForm" class="h-full flex flex-col justify-between flex-1">
                             @csrf
                             @method('PUT')
-                            <div class="space-y-4">
+                            <div class="flex flex-col flex-1 space-y-4 mb-4">
                                 <div class="flex justify-between items-center border-b pb-1">
                                     <span class="text-xs font-bold text-rose-400 uppercase">Edit Entry...</span>
                                 </div>
                                 <input type="text" name="title" required x-model="editingEntry.title" placeholder=" Journal Title..." class="w-full bg-transparent border-b border-rose-200/60 focus:outline-none text-lg font-bold text-slate-800 py-1">
-                                <textarea name="content" required rows="8" x-model="editingEntry.body" placeholder="What's on your mind?" class="w-full bg-transparent resize-none focus:outline-none text-slate-600 text-sm leading-relaxed"></textarea>
+                                <textarea name="content" required x-model="editingEntry.body" placeholder="What's on your mind?" class="w-full bg-transparent resize-none focus:outline-none text-slate-600 text-sm leading-relaxed flex-1 h-full min-h-[180px]"></textarea>
                             </div>
                             
-                            <div class="space-y-2 pt-2">
+                            <div class="space-y-2 pt-2 border-t border-rose-100">
                                 <div class="flex items-center space-x-3">
                                     <label class="text-xs font-bold text-slate-400">Sticker badge:</label>
                                     <select name="mood" x-model="editingEntry.mood" class="bg-white border border-rose-200 rounded-xl px-2 py-1 text-xs text-slate-700">
@@ -176,7 +191,7 @@
                 </div>
 
                 <!-- ================= RIGHT PAGE ================= -->
-                <div class="w-full md:min-w-0 snap-center snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
+                <div class="w-full min-w-full min-h-[520px] md:min-h-0 md:min-w-0 snap-start snap-always flex-shrink-0 box-border bg-white md:bg-transparent rounded-[2rem] md:rounded-none shadow-2xl md:shadow-none border border-rose-200/60 md:border-0 p-6 md:p-10 flex flex-col justify-between">
                     
                     <!-- State 1: Table of Contents List Index -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
@@ -188,14 +203,34 @@
                             <div class="overflow-y-auto max-h-[380px] space-y-2 pr-1">
                                 <template x-for="(page, idx) in pages" :key="idx">
                                     <div x-show="!page.isContinuation"
-                                         @click="spread = 'read'; currentPageIndex = Math.floor(idx / 2)" 
-                                         class="flex items-center justify-between p-3 rounded-xl hover:bg-rose-50/70 transition-all cursor-pointer border border-transparent hover:border-rose-100/50 group">
-                                        <div class="flex items-center space-x-3 truncate">
+                                         class="flex items-center justify-between p-3 rounded-xl hover:bg-rose-50/70 transition-all border border-transparent hover:border-rose-100/50 group">
+                                        
+                                        <div @click="spread = 'read'; currentPageIndex = Math.floor(idx / 2)" 
+                                             class="flex items-center space-x-3 truncate flex-1 cursor-pointer">
                                             <span class="text-xs font-mono text-rose-300 group-hover:text-rose-400" x-text="'Pg. ' + String(page.pageNumber).padStart(2, '0')"></span>
                                             <span class="text-sm" x-text="page.mood"></span>
                                             <h4 class="text-sm font-semibold text-slate-700 truncate group-hover:text-slate-900" x-text="page.title"></h4>
                                         </div>
-                                        <span class="text-xs font-mono text-rose-300 whitespace-nowrap ml-2" x-text="'p. ' + page.date"></span>
+
+                                        <div class="flex items-center space-x-2 ml-2">
+                                            <div class="hidden group-hover:flex items-center space-x-2 animate-fadeIn">
+                                                <button type="button" 
+                                                        @click.stop="startEdit(page.entryId)" 
+                                                        class="p-1 text-xs hover:bg-rose-200 rounded transition-colors" 
+                                                        title="Edit Entry">✏️</button>
+                                                
+                                                <form :action="'/entries/' + page?.entryId" 
+                                                      method="POST" 
+                                                      @submit.prevent="if(confirm('Delete this entry? This cannot be undone.')) $el.submit()">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            class="p-1 text-xs hover:bg-red-100 rounded text-red-500 transition-colors" 
+                                                            title="Delete Entry">🗑️</button>
+                                                </form>
+                                            </div>
+                                            <span class="text-xs font-mono text-rose-300 whitespace-nowrap" x-text="'p. ' + page.date"></span>
+                                        </div>
                                     </div>
                                 </template>
                                 <div x-show="pages.length === 0" class="text-slate-300 text-sm text-center py-16">
@@ -213,7 +248,7 @@
                             
                             <!-- Display side-by-side if page exists -->
                             <div x-show="rightPage">
-                                <span class="text-xs font-bold text-rose-400 tracking-wide block mb-4" x-text="'📖 PAGE 0' + rightPage?.pageNumber"></span>
+                                <span class="text-xs font-bold text-rose-400 tracking-wide block mb-4" x-text="'📖 PAGE ' + String(rightPage?.pageNumber).padStart(2, '0')"></span>
                                 <div class="flex items-center space-x-2 border-b border-rose-200 pb-3 mb-4">
                                     <span class="text-2xl" x-text="rightPage?.mood"></span>
                                     <h3 class="text-xl font-bold text-slate-800 truncate" x-text="rightPage?.title"></h3>
@@ -221,7 +256,7 @@
                                         <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-md font-medium ml-2">Cont.</span>
                                     </template>
                                 </div>
-                                <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap select-text" x-text="rightPage?.body"></p>
+                                <p class="text-slate-600 text-sm leading-relaxed whitespace-pre-line select-text" x-text="rightPage?.body"></p>
                             </div>
 
                             <!-- Empty right page layout prompt -->
