@@ -38,14 +38,25 @@
               let globalPageNum = 1;
 
               this.rawEntries.forEach(entry => {
-                  let words = entry.body.split(/\s+/);
+                  // FIX: Match words OR single newlines so stanzas aren't deleted
+                  let tokens = entry.body.match(/\n|\S+/g) || [];
                   let wordsPerPage = 170; 
-                  let chunkCount = Math.ceil(words.length / wordsPerPage) || 1;
+                  let chunkCount = Math.ceil(tokens.length / wordsPerPage) || 1;
 
                   for (let i = 0; i < chunkCount; i++) {
                       let start = i * wordsPerPage;
                       let end = start + wordsPerPage;
-                      let textChunk = words.slice(start, end).join(' ');
+                      let tokenChunk = tokens.slice(start, end);
+
+                      // Reconstruct the text elegantly while managing spaces around newlines
+                      let textChunk = '';
+                      tokenChunk.forEach((token, index) => {
+                          if (token === '\n') {
+                              textChunk += '\n';
+                          } else {
+                              textChunk += token + (index < tokenChunk.length - 1 && tokenChunk[index+1] !== '\n' ? ' ' : '');
+                          }
+                      });
 
                       computedPages.push({
                           entryId: entry.id,
@@ -53,7 +64,7 @@
                           title: entry.title,
                           mood: entry.mood,
                           date: entry.date,
-                          body: textChunk + (i < chunkCount - 1 ? ' ...' : ''),
+                          body: textChunk.trim() + (i < chunkCount - 1 ? ' ...' : ''),
                           isContinuation: i > 0
                       });
                   }
