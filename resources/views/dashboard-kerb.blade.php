@@ -74,7 +74,7 @@
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
                             <span class="text-xs font-bold text-zinc-400 tracking-wide block mb-6">🖤 MY JOURNAL</span>
-                            <h3 class="text-2xl font-bold text-zinc-800 mb-4">Welcome back 🪐</h3>
+                            <h3 class="text-2xl font-bold text-zinc-800 mb-4">Welcome back, Kerby! 🪐</h3>
                             <p class="text-zinc-500 text-sm leading-relaxed mb-4">You're here once again Kerby! Or is it you my baby Yannie? What do you have in mind???</p>
                         </div>
                         <div class="text-xs text-zinc-400">My thoughts? ✨</div>
@@ -154,7 +154,7 @@
                                     </div>
                                 </template>
                                 <div x-show="pages.length === 0" class="text-zinc-400 text-sm text-center py-16">
-                                    Your book is empty. Press Next to write your first log.
+                                    Your diary is empty. Press Next to write your first log.
                                 </div>
                             </div>
                         </div>
@@ -182,7 +182,7 @@
                             <div x-show="!rightPage" class="flex flex-col justify-center items-center border border-dashed border-zinc-300 bg-zinc-50/50 rounded-2xl p-8 text-center space-y-4 my-4 min-h-[300px]">
                                 <span class="text-4xl">✒️</span>
                                 <h4 class="text-base font-bold text-zinc-800">Clean Slate</h4>
-                                <p class="text-xs text-zinc-400 max-w-[200px]">If you come across this clean slate, go to the next page to write a new one, baby!</p>
+                                <p class="text-xs text-zinc-400 max-w-[200px]">Ihttps://our-journal-o350.onrender.comf you come across this clean slate, go to the next page to write a new one, baby!</p>
                             </div>
                         </div>
                         <div class="text-xs text-zinc-400 text-right" x-text="pages[(currentPageIndex * 2) + 1] ? 'Logged on ' + pages[(currentPageIndex * 2) + 1]?.date : ''"></div>

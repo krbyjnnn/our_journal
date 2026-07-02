@@ -72,9 +72,9 @@
                     <!-- State 1: Main Welcome Index Left Side -->
                     <div x-show="spread === 'index'" class="h-full flex flex-col justify-between animate-fadeIn">
                         <div>
-                            <span class="text-xs font-bold text-rose-400 tracking-wide block mb-6">MY JOURNAL ✨</span>
+                            <span class="text-xs font-bold text-rose-400 tracking-wide block mb-6">✨ MY JOURNAL </span>
                             <h3 class="text-2xl font-bold text-slate-800 mb-4">Welcome back, Yannie 🩷</h3>
-                            <p class="text-slate-600 text-sm leading-relaxed mb-4">Welcome to your personal diary corner. Drop your random feelings, stories, or highlights here.</p>
+                            <p class="text-slate-600 text-sm leading-relaxed mb-4">Every day is a new chance to become a better version of yourself.</p>
                         </div>
                     </div>
 
@@ -151,7 +151,7 @@
                                     </div>
                                 </template>
                                 <div x-show="pages.length === 0" class="text-slate-300 text-sm text-center py-16">
-                                    Your diary is currently empty. Press Next to start writing.
+                                    Your journal is currently empty. Press Next to start writing.
                                 </div>
                             </div>
                         </div>
